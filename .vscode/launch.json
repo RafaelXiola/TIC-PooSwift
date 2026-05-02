@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:TIC-PooSwift}",
+            "name": "Debug Projeto_Academia",
+            "target": "Projeto_Academia",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug Projeto_Academia"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:TIC-PooSwift}",
+            "name": "Release Projeto_Academia",
+            "target": "Projeto_Academia",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release Projeto_Academia"
+        }
+    ]
+}

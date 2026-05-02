@@ -73,6 +73,19 @@ enum CatalogoPlanos {
     static let todos: [PlanoAssinatura] = [mensal, trimestral, anual]
 }
 
+// MARK: - Sistema de Frequência
+
+/// Registro de uma entrada do aluno na academia
+struct CheckIn {
+    let data: Date
+    
+    var dataFormatada: String {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "dd/MM/yyyy HH:mm:ss"
+        return fmt.string(from: data)
+    }
+}
+
 // MARK: - Hierarquia de Pessoas
 
 /// Entidade base genérica para pessoas
@@ -95,6 +108,9 @@ class Aluno: Pessoa {
     let matricula: String
     private(set) var plano: PlanoAssinatura
     private(set) var nivelExperiencia: NivelExperiencia
+    
+    // Histórico de frequência
+    private(set) var historicoCheckIns: [CheckIn] = []
 
     init(nome: String, email: String, matricula: String,
          plano: PlanoAssinatura, nivelExperiencia: NivelExperiencia) {
@@ -114,6 +130,18 @@ class Aluno: Pessoa {
     func atualizarNivel(_ novoNivel: NivelExperiencia) {
         nivelExperiencia = novoNivel
         print("   ✅ Nível de '\(nome)' atualizado para: \(novoNivel.rawValue)")
+    }
+    
+    /// Registra uma nova presença
+    func registrarPresenca() {
+        let novoCheckIn = CheckIn(data: Date())
+        historicoCheckIns.append(novoCheckIn)
+        print("   📍 Check-in realizado para '\(nome)' às \(novoCheckIn.dataFormatada)")
+    }
+
+    /// Retorna o total de visitas
+    var totalPresencas: Int {
+        return historicoCheckIns.count
     }
 
     override func descrever() -> String {
@@ -430,6 +458,30 @@ class GerenciadorAcademia {
         print("   ✅ Turma '\(turma.nomeAula)' registrada.")
     }
 
+    // MARK: Controle de Frequência
+
+    /// Realiza o check-in de um aluno via matrícula
+    func realizarCheckIn(matricula: String) throws {
+        guard let aluno = alunos[matricula] else {
+            throw ErroAcademia.alunoNaoEncontrado(matricula)
+        }
+        aluno.registrarPresenca()
+    }
+
+    /// Gera um relatório de estatísticas de frequência
+    func imprimirEstatisticasFrequencia() {
+        print("\n📊 ESTATÍSTICAS DE FREQUÊNCIA:")
+        print(String(repeating: "─", count: 44))
+        
+        // Ordena alunos pelos mais frequentes
+        let ranking = alunos.values.sorted { $0.totalPresencas > $1.totalPresencas }
+        
+        for aluno in ranking {
+            print("  • \(aluno.nome.padding(toLength: 15, withPad: " ", startingAt: 0)) | Check-ins: \(aluno.totalPresencas)")
+        }
+        print(String(repeating: "─", count: 44))
+    }
+
     // MARK: Manutenção em Lote
 
     /// Itera sobre todos os equipamentos, efetua manutenção programada
@@ -536,7 +588,7 @@ class GerenciadorAcademia {
 
 func executarDemo() {
     print("╔══════════════════════════════════════════════════╗")
-    print("║         SISTEMA DE GESTÃO DE ACADEMIA            ║")
+    print("║        SISTEMA DE GESTÃO DE ACADEMIA             ║")
     print("╚══════════════════════════════════════════════════╝\n")
 
     // ── Instrutores ──────────────────────────────────────────
@@ -576,6 +628,16 @@ func executarDemo() {
     try? academia.cadastrarAluno(alunoAna)
     try? academia.cadastrarAluno(alunoBruno)
     try? academia.cadastrarAluno(alunoCamila)
+
+    // ── Sistema de Check-in (NOVO) ────────────────────────────
+    print("\n─── Sistema de Check-in ───────────────────────────")
+    try? academia.realizarCheckIn(matricula: "2024001") // Ana
+    try? academia.realizarCheckIn(matricula: "2024002") // Bruno
+    try? academia.realizarCheckIn(matricula: "2024002") // Bruno (segunda vez)
+    try? academia.realizarCheckIn(matricula: "2024003") // Camila
+    
+    // Gerar estatísticas de check-in
+    academia.imprimirEstatisticasFrequencia()
 
     // ── Teste de duplicidade ──────────────────────────────────
     print("\n─── Proteção contra Duplicidade ───────────────────")
